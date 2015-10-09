@@ -1,6 +1,7 @@
 package ninja.unlucky.bearychatbot
 
 import groovy.util.logging.Log4j2
+import groovy.json.*
 
 import io.vertx.lang.groovy.GroovyVerticle
 import io.vertx.core.Future
@@ -8,31 +9,31 @@ import io.vertx.core.Future
 @Log4j2
 public class BearychatBot extends GroovyVerticle {
 
+    def jsonSluper
     public void start(Future<Void> fut) {
         log.info 'Starting'
+        this.jsonSluper = new JsonSlurper()
         vertx.createHttpServer().requestHandler{ req ->
             println 'request received!'
-            req.response().with{
-                putHeader 'content-type', 'text/plain'
-                end 'vert.x 3 speaking'
+            def json
+            req.bodyHandler{
+                json = jsonSluper.parseText it.toString("UTF-8")?:'{}'
+            
+                log.debug json
+                req.response().with{
+                    putHeader 'content-type', 'application/json'
+                    end json?JsonOutput.toJson([text: json.text]):''
+                }
             }
-            log.debug 'Attributes: '
+            log.debug 'Headers: '
             log.debug ({
-                def form = req.formAttributes()
+                def form = req.headers()
                 def set = form.names()
-                set.collect{
-                    form.getAll(it)
+                set.collectEntries{
+                    [(it): form.getAll(it)]
                 }
             }())
-            log.debug 'Params: '
-            log.debug ({
-                def form = req.params()
-                def set = form.names()
-                set.collect{
-                    form.getAll(it)
-                }
-            }())
-            log.debug req.localAddress().with{ "Request from ${host()}:${port()}" }
+            log.debug req.remoteAddress().with{ "Request from ${host()}:${port()}" }
             log.debug "Request for ${req.absoluteURI()}"
         }
         .listen 80, { result ->
