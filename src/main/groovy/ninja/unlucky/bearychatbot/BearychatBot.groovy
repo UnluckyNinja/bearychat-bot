@@ -111,7 +111,7 @@ public class BearychatBot extends GroovyVerticle {
     }
     
     def debugResponse(res){
-        log.debug res.remoteAddress().with{ "Response from ${host()}:${port()}" }
+        log.debug res.with{ "Response back ${statusCode()}:${statusMessage()}" }
         log.debug 'Headers: '
         log.debug ({
             def form = res.headers()
