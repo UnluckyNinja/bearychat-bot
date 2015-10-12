@@ -17,10 +17,10 @@ public class BearychatBot extends GroovyVerticle {
     public void start(Future<Void> fut) {
         log.info 'Starting'
         this.jsonSluper = new JsonSlurper()
-        server = vertx.createHttpServer()
-        client = vertx.createHttpClient(ssl: true, keepAlive: false)
-        server = setupServer(server, fut)
-        client = setupClient(client)
+        this.server = vertx.createHttpServer()
+        this.client = vertx.createHttpClient(ssl: true, keepAlive: false)
+        setupServer(server, fut)
+        setupClient(client)
         log.info 'Started'
     }
     
@@ -30,16 +30,17 @@ public class BearychatBot extends GroovyVerticle {
             def json
             req.bodyHandler{ req_buffer ->
                 json = jsonSluper.parseText req_buffer.toString("UTF-8")?:'{}'
-                if(!json || json.channel_name != 'craft&lamplighter'){
+                if(json) log.debug json
+                if(!json || json.subdomain != 'craft_lamplighter'){
                     req.response().with{
                         putHeader 'content-type', 'text/plain'
                         end 'This subdomain is used only for personal bearychat bot'
                     }
+                    return
                 }
-                log.debug json
                 def options = json.text.split('\\s').tail()
                 if(options[0] == 'steam'){
-                    client.getNow('steamdb.info', '/sales'){ c_res ->
+                    this.client.getNow('steamdb.info', '/sales'){ c_res ->
                         c_res.bodyHandler{ c_res_buffer ->
                             def page = Jsoup.parse(c_res_buffer.toString('UTF-8'))
                             def items = []
