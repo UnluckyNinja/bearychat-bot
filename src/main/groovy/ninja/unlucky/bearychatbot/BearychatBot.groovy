@@ -44,7 +44,7 @@ public class BearychatBot extends GroovyVerticle {
                         c_res.bodyHandler{ c_res_buffer ->
                             def page = Jsoup.parse(c_res_buffer.toString('UTF-8'))
                             def items = []
-                            def sales = page.select('tbody[data-section=dailydeal]')
+                            def sales = page.select('tbody[data-section="dailydeal"]')
                                             .first().children().each{ child ->
                                 def item = [:]
                                 def (name, link) = child.select('a.b').first().with{
