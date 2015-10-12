@@ -18,7 +18,7 @@ public class BearychatBot extends GroovyVerticle {
         log.info 'Starting'
         this.jsonSluper = new JsonSlurper()
         this.server = vertx.createHttpServer()
-        this.client = vertx.createHttpClient(ssl: true, keepAlive: false)
+        this.client = vertx.createHttpClient()
         setupServer(server, fut)
         setupClient(client)
         log.info 'Started'
