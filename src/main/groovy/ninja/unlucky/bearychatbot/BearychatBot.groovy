@@ -6,43 +6,105 @@ import groovy.json.*
 import io.vertx.lang.groovy.GroovyVerticle
 import io.vertx.core.Future
 
+import org.jsoup.*
+
 @Log4j2
 public class BearychatBot extends GroovyVerticle {
 
     def jsonSluper
+    def server
+    def client
     public void start(Future<Void> fut) {
         log.info 'Starting'
         this.jsonSluper = new JsonSlurper()
-        vertx.createHttpServer().requestHandler{ req ->
+        server = vertx.createHttpServer()
+        client = vertx.createHttpClient(ssl: true, keepAlive: false)
+        server = setupServer(server, fut)
+        client = setupClient(client)
+        log.info 'Started'
+    }
+    
+    def setupServer(server, fut){
+        server.requestHandler{ req ->
             println 'request received!'
             def json
-            req.bodyHandler{
-                json = jsonSluper.parseText it.toString("UTF-8")?:'{}'
-            
+            req.bodyHandler{ req_buffer ->
+                json = jsonSluper.parseText req_buffer.toString("UTF-8")?:'{}'
+                if(!json || json.channel_name != 'craft&lamplighter'){
+                    req.response().with{
+                        putHeader 'content-type', 'text/plain'
+                        end 'This subdomain is used only for personal bearychat bot'
+                    }
+                }
                 log.debug json
-                req.response().with{
-                    putHeader 'content-type', 'application/json'
-                    end json?JsonOutput.toJson([text: json.text]):''
+                def options = json.text.split('\\s').tail()
+                if(options[0] == 'steam'){
+                    client.getNow('steamdb.info', '/sales'){ c_res ->
+                        c_res.bodyHandler{ c_res_buffer ->
+                            def page = Jsoup.parse(c_res_buffer.toString('UTF-8'))
+                            def items = []
+                            def sales = page.select('tbody[data-section=dailydeal]')
+                                            .first().children().each{ child ->
+                                def item = [:]
+                                def (name, link) = child.select('a.b').first().with{
+                                    [it.text(), "https://steampowered.com${it.attr('href')}" ]
+                                }
+                                def discount = child.select('td.price-discount').first().text()
+                                def color = '#8BC34A'
+                                def lowest = child.select('span.lowest-discount').with{
+                                    if(isEmpty()) return discount
+                                    color = '#9E9E9E'
+                                    first().select('b').text()
+                                }
+                                def price = child.select('td.price-final').text()
+                                def logolink = child.select('td.applog').select('img').attr('src')
+                                def timeleft = child.select('td.timeago').text()
+                                def rating = child.select('span.tooltipped').text()
+                                def title = [name, price, "$discount/$lowest", timeleft+' left', rating]
+                                             .join(' ')
+                                item.title = title
+                                item.text = link
+                                item.color = color
+                                item.images = [[url: logolink]]
+                                items << item
+                            }
+                            req.response().with{
+                                putHeader 'content-type', 'application/json'
+                                end JsonOutput.toJson([text: 'Steam Daily Deals', attachments: items])
+                            }
+                        }.exceptionHandler{ e ->
+                            req.response().with{
+                                putHeader 'content-type', 'application/json'
+                                end JsonOutput.toJson([text: '²éÑ¯Ê§°Ü'])
+                            }
+                        }
+                    }
                 }
             }
-            log.debug 'Headers: '
-            log.debug ({
-                def form = req.headers()
-                def set = form.names()
-                set.collectEntries{
-                    [(it): form.getAll(it)]
-                }
-            }())
-            log.debug req.remoteAddress().with{ "Request from ${host()}:${port()}" }
-            log.debug "Request for ${req.absoluteURI()}"
-        }
-        .listen 80, { result ->
+            debugRequest(req)
+        }.listen 80, { result ->
             if (result.succeeded()) {
                 fut.complete()
             } else {
                 fut.fail result.cause()
             }
         }
-        log.info 'Started'
+    }
+
+    def setupClient(client){
+        
+    }
+
+    def debugRequest(req){
+        log.debug 'Headers: '
+        log.debug ({
+            def form = req.headers()
+            def set = form.names()
+            set.collectEntries{
+                [(it): form.getAll(it)]
+            }
+        }())
+        log.debug req.remoteAddress().with{ "Request from ${host()}:${port()}" }
+        log.debug "Request for ${req.absoluteURI()}"
     }
 }
