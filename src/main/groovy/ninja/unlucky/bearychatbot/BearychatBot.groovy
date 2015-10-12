@@ -18,7 +18,7 @@ public class BearychatBot extends GroovyVerticle {
         log.info 'Starting'
         this.jsonSluper = new JsonSlurper()
         this.server = vertx.createHttpServer()
-        this.client = vertx.createHttpClient()
+        this.client = vertx.createHttpClient(ssl:true, trustAll: true)
         setupServer(server, fut)
         setupClient(client)
         log.info 'Started'
@@ -40,7 +40,7 @@ public class BearychatBot extends GroovyVerticle {
                 }
                 def options = json.text.split('\\s').tail()
                 if(options[0] == 'steam'){
-                    this.client.getNow('steamdb.info', '/sales'){ c_res ->
+                    this.client.getNow(443, 'steamdb.info', '/sales'){ c_res ->
                         debugResponse(c_res)
                         c_res.bodyHandler{ c_res_buffer ->
                             def pageString = c_res_buffer.toString('UTF-8')
