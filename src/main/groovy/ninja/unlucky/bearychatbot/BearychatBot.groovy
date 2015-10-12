@@ -41,6 +41,7 @@ public class BearychatBot extends GroovyVerticle {
                 def options = json.text.split('\\s').tail()
                 if(options[0] == 'steam'){
                     this.client.getNow('steamdb.info', '/sales'){ c_res ->
+                        debugResponse(c_res)
                         c_res.bodyHandler{ c_res_buffer ->
                             def page = Jsoup.parse(c_res_buffer.toString('UTF-8'))
                             def items = []
@@ -97,6 +98,8 @@ public class BearychatBot extends GroovyVerticle {
     }
 
     def debugRequest(req){
+        log.debug req.remoteAddress().with{ "Request from ${host()}:${port()}" }
+        log.debug "Request for ${req.absoluteURI()}"
         log.debug 'Headers: '
         log.debug ({
             def form = req.headers()
@@ -105,7 +108,17 @@ public class BearychatBot extends GroovyVerticle {
                 [(it): form.getAll(it)]
             }
         }())
-        log.debug req.remoteAddress().with{ "Request from ${host()}:${port()}" }
-        log.debug "Request for ${req.absoluteURI()}"
+    }
+    
+    def debugResponse(res){
+        log.debug res.remoteAddress().with{ "Response from ${host()}:${port()}" }
+        log.debug 'Headers: '
+        log.debug ({
+            def form = res.headers()
+            def set = form.names()
+            set.collectEntries{
+                [(it): form.getAll(it)]
+            }
+        }())
     }
 }
