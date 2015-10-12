@@ -43,7 +43,9 @@ public class BearychatBot extends GroovyVerticle {
                     this.client.getNow('steamdb.info', '/sales'){ c_res ->
                         debugResponse(c_res)
                         c_res.bodyHandler{ c_res_buffer ->
-                            def page = Jsoup.parse(c_res_buffer.toString('UTF-8'))
+                            def pageString = c_res_buffer.toString('UTF-8')
+                            def page = Jsoup.parse(pageString)
+                            log.debug pageString.size()
                             def items = []
                             def sales = page.select('tbody[data-section="dailydeal"]')
                                             .first().children().each{ child ->
