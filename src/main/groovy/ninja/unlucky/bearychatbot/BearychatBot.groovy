@@ -95,7 +95,7 @@ public class BearychatBot extends GroovyVerticle {
                             println e
                             req.response().with {
                                 putHeader 'Content-Type', 'application/json'
-                                end JsonOutput.toJson([text: '²éÑ¯Ê§°Ü'])
+                                end JsonOutput.toJson([text: 'æŸ¥è¯¢å¤±è´¥'])
                             }
                         }
                     }.with {
@@ -166,7 +166,7 @@ public class BearychatBot extends GroovyVerticle {
             }.exceptionHandler { e ->
                 req.response().with {
                     putHeader 'content-type', 'application/json'
-                    end JsonOutput.toJson([text: '²éÑ¯Ê§°Ü'])
+                    end JsonOutput.toJson([text: 'æŸ¥è¯¢å¤±è´¥'])
                 }
             }
         }.with {
