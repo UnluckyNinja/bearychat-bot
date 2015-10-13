@@ -85,7 +85,7 @@ public class BearychatBot extends GroovyVerticle {
                                 log.debug jsonOutput//JsonOutput.prettyPrint(jsonOutput)
                                 def buffer = Buffer.buffer(jsonOutput, 'UTF-8')
                                 putHeader 'Content-Type', 'application/json'
-                                putHeader 'Content-Length', buffer.length()
+                                putHeader 'Content-Length', ''+buffer.length()
                                 end buffer
                             }
                         }.exceptionHandler { e ->
