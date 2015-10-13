@@ -35,8 +35,8 @@ public class BearychatBot extends GroovyVerticle {
                 if (json) log.debug json
                 if (!json || json.subdomain != 'craft_lamplighter') {
                     req.response().with {
-                        putHeader 'Content-Type', 'text/plain'
-                        end 'This subdomain is used only for personal bearychat bot'
+                        putHeader 'Content-Type', 'application/json'
+                        end '{text="access denied"}'
                     }
                     log.debug 'access denied'
                     return
