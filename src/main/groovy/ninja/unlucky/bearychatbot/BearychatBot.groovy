@@ -37,6 +37,7 @@ public class BearychatBot extends GroovyVerticle {
                         putHeader 'content-type', 'text/plain'
                         end 'This subdomain is used only for personal bearychat bot'
                     }
+                    log.debug 'access denied'
                     return
                 }
                 def options = json.text.split('\\s').tail()
@@ -78,9 +79,11 @@ public class BearychatBot extends GroovyVerticle {
                             }
                             req.response().with {
                                 putHeader 'content-type', 'application/json'
+                                log.debug JsonOutput.toJson([text: 'Steam Daily Deals', attachments: items])
                                 end JsonOutput.toJson([text: 'Steam Daily Deals', attachments: items])
                             }
                         }.exceptionHandler { e ->
+                            println e
                             req.response().with {
                                 putHeader 'content-type', 'application/json'
                                 end JsonOutput.toJson([text: '≤È—Ø ß∞‹'])
