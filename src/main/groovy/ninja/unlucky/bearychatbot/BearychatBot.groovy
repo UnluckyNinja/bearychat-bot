@@ -66,7 +66,7 @@ public class BearychatBot extends GroovyVerticle {
                                     first().select('b').text()
                                 }
                                 def price = child.select('td.price-final').text()
-                                def logolink = child.select('td.applog').select('img').first().attr('src')
+                                def logolink = child.select('td.applogo').select('img').first().attr('src')
                                 def timeleft = child.select('td.timeago').text()
                                 def rating = child.select('span.tooltipped').text()
                                 def title = [name, price, "$discount/$lowest", timeleft + ' left', rating]
