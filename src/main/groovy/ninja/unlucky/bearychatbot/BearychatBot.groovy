@@ -108,7 +108,7 @@ public class BearychatBot extends GroovyVerticle {
                         putHeader 'upgrade-insecure-requests', '1'
                         putHeader 'user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'
                     }.end()
-                } else if (options == 'ping') {
+                } else if (options[0] == 'ping') {
                     req.response().with {
                         def jsonOutput = JsonOutput.toJson([text: 'Pong!'])
                         log.debug jsonOutput//JsonOutput.prettyPrint(jsonOutput)
