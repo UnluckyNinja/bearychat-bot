@@ -21,7 +21,7 @@ public class BearychatBot extends GroovyVerticle {
         this.server = vertx.createHttpServer(compressionSupported: true)
         this.client = vertx.createHttpClient(ssl: true, trustAll: true, tryUseCompression: true)
         setupServer(server, fut)
-        //testClient(client)
+        testClient(client)
         log.info 'Started'
     }
     def cookie = ''
@@ -130,7 +130,19 @@ public class BearychatBot extends GroovyVerticle {
     }
 
     def testClient(client) {
-
+        vertx.createHttpClient(tryUseCompression: true).post(80, 'localhost', '/') { c_res ->
+            c_res.bodyHandler{ c_res_buffer ->
+                log.debug c_res_buffer.toString("UTF-8")
+                def json = jsonSluper.parseText c_res_buffer.toString("UTF-8") ?: '{}'
+                log.debug json
+            }
+        }.with{
+            putHeader 'Connection', 'close'
+            putHeader 'content-type', 'application/json'
+            putHeader 'accept-encoding', 'gzip, deflate'
+            putHeader 'Host', 'bearychat-bot.unlucky.ninja'
+            putHeader 'User-Agent', 'Apache-HttpClient/4.3.3 (java 1.5)'
+        }.end('{"channel_name":"Test", "subdomain":"craft_lamplighter", "text":"bot steam", "token":"ac94dcb43c0755e81a228c89da24304c", "trigger_word":"bot", "ts":"1444753845518", "user_name": "UnluckyNinja" }')
     }
 
     def debugRequest(req) {
