@@ -23,7 +23,7 @@ public class BearychatBot extends GroovyVerticle {
         setupClient(client)
         log.info 'Started'
     }
-    
+    cookie = ''
     def setupServer(server, fut){
         server.requestHandler{ req ->
             println 'request received!'
@@ -40,8 +40,11 @@ public class BearychatBot extends GroovyVerticle {
                 }
                 def options = json.text.split('\\s').tail()
                 if(options[0] == 'steam'){
-                    this.client.get(443, 'steamdb.info', '/sales'){ c_res ->
+                    this.client.get(443, 'steamdb.info', '/sales/'){ c_res ->
                         debugResponse(c_res)
+                        if(!cookie && c_res.cookies()){
+                            cookie = c_res.cookies().join(' ')
+                        }
                         c_res.bodyHandler{ c_res_buffer ->
                             def pageString = c_res_buffer.toString('UTF-8')
                             def page = Jsoup.parse(pageString)
@@ -83,15 +86,18 @@ public class BearychatBot extends GroovyVerticle {
                             }
                         }
                     }.with{
-                        putHeader 'accept:', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
-                        putHeader 'accept-encoding:', 'gzip, deflate, sdch'
-                        putHeader 'accept-language:', 'zh-CN,zh;q=0.8,en;q=0.6,zh-TW;q=0.4,ja;q=0.2'
-                        putHeader 'cache-control:', 'max-age=0'
-                        putHeader 'dnt:', '1'
-                        putHeader 'referer:', 'https://steamdb.info/'
-                        putHeader 'upgrade-insecure-requests:', '1'
-                        putHeader 'user-agent:', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'
-                    }.end()
+                        putHeader 'accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+                        putHeader 'accept-encoding', 'gzip, deflate, sdch'
+                        putHeader 'accept-language', 'zh-CN,zh;q=0.8,en;q=0.6,zh-TW;q=0.4,ja;q=0.2'
+                        putHeader 'cache-control', 'max-age=0'
+                        if(cookie){
+                            putHeader 'cookie', cookie
+                        }
+                        putHeader 'dnt', '1'
+                        putHeader 'referer', 'https://steamdb.info/'
+                        putHeader 'upgrade-insecure-requests', '1'
+                        putHeader 'user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'
+                    }.end() //@TODO ADD COOKIE SUPPORT
                 }
             }
             debugRequest(req)
