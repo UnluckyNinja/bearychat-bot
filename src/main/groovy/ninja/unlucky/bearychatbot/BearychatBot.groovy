@@ -81,15 +81,12 @@ public class BearychatBot extends GroovyVerticle {
                                 items << item
                             }
                             req.response().with {
-                                setChunked(true)
-                                setStatusCode(c_res.statusCode())
-                                putHeader 'Content-Type', 'application/json'
                                 def jsonOutput = JsonOutput.toJson([text: 'Steam Daily Deals', attachments: items])
                                 log.debug jsonOutput//JsonOutput.prettyPrint(jsonOutput)
                                 def buffer = Buffer.buffer(jsonOutput, 'UTF-8')
-                                putHeader 'Content-Length', '' + buffer.length()
-                                write buffer
-                                end()
+                                putHeader 'Content-Type', 'application/json'
+                                putHeader 'Content-Length', buffer.length()
+                                end buffer
                             }
                         }.exceptionHandler { e ->
                             println e
@@ -111,6 +108,15 @@ public class BearychatBot extends GroovyVerticle {
                         putHeader 'upgrade-insecure-requests', '1'
                         putHeader 'user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'
                     }.end()
+                } else if (options == 'ping') {
+                    req.response().with {
+                        def jsonOutput = JsonOutput.toJson([text: 'Pong!'])
+                        log.debug jsonOutput//JsonOutput.prettyPrint(jsonOutput)
+                        def buffer = Buffer.buffer(jsonOutput, 'UTF-8')
+                        putHeader 'Content-Type', 'application/json'
+                        putHeader 'Content-Length', buffer.length()
+                        end buffer
+                    }
                 }
             }
             debugRequest(req)
@@ -124,65 +130,6 @@ public class BearychatBot extends GroovyVerticle {
     }
 
     def testClient(client) {
-        this.client.get(443, 'steamdb.info', '/sales/') { c_res ->
-            debugResponse(c_res)
-            if (!cookie && c_res.cookies()) {
-                cookie = c_res.cookies().join(' ')
-            }
-            c_res.bodyHandler { c_res_buffer ->
-                def pageString = c_res_buffer.toString("UTF-8")
-                def page = Jsoup.parse(pageString)
-                log.debug pageString.size()
-
-                def items = []
-                def sales = page.select('tbody[data-section="dailydeal"]').first().children().each { child ->
-                    def item = [:]
-                    def (name, link) = child.select('a.b').first().with {
-                        [text(), "https://steampowered.com${attr('href')}"]
-                    }
-                    def discount = child.select('td[class^=price-discount]').first().text()
-                    def color = '#8BC34A'
-                    def lowest = child.select('span.lowest-discount').with {
-                        if (isEmpty()) return discount
-                        color = '#9E9E9E'
-                        first().select('b').text()
-                    }
-                    def price = child.select('td.price-final').text()
-                    def logolink = child.select('td.applog').select('img').attr('src')
-                    def timeleft = child.select('td.timeago').text()
-                    def rating = child.select('span.tooltipped').text()
-                    def title = [name, price, "$discount/$lowest", timeleft + ' left', rating]
-                            .join(' ')
-                    item.title = title
-                    item.text = link
-                    item.color = color
-                    item.images = [[url: logolink]]
-                    items << item
-                }
-                req.response().with {
-                    putHeader 'content-type', 'application/json'
-                    end JsonOutput.toJson([text: 'Steam Daily Deals', attachments: items])
-                }
-            }.exceptionHandler { e ->
-                req.response().with {
-                    putHeader 'content-type', 'application/json'
-                    end JsonOutput.toJson([text: '查询失败'])
-                }
-            }
-        }.with {
-            putHeader 'accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
-            putHeader 'accept-encoding', 'gzip, deflate, sdch'
-            putHeader 'accept-language', 'zh-CN,zh;q=0.8,en;q=0.6,zh-TW;q=0.4,ja;q=0.2'
-            putHeader 'cache-control', 'max-age=0'
-            if (cookie) {
-                putHeader 'cookie', cookie
-            }
-            putHeader 'dnt', '1'
-            putHeader 'referer', 'https://steamdb.info/'
-            putHeader 'upgrade-insecure-requests', '1'
-            putHeader 'user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'
-        }.end()
-
 
     }
 
