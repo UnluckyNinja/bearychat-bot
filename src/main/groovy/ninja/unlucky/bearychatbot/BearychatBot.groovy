@@ -53,7 +53,7 @@ public class BearychatBot extends GroovyVerticle {
                             log.debug pageString.size()
 
                             def items = []
-                            def sales = page.select('tbody[data-section="dailydeal"]').first().children().first { child ->
+                            def sales = page.select('tbody[data-section="dailydeal"]').first().children().each { child ->
                                 def item = [:]
                                 def (name, link) = child.select('a.b').first().with {
                                     [text(), "https://steampowered.com${attr('href')}"]
@@ -80,7 +80,7 @@ public class BearychatBot extends GroovyVerticle {
                             req.response().with {
                                 putHeader 'content-type', 'application/json'
                                 log.debug JsonOutput.toJson([text: 'Steam Daily Deals', attachments: items])
-                                end JsonOutput.toJson([text: 'Steam Daily Deals', attachments: items])
+                                end JsonOutput.toJson([text: 'Steam Daily Deals', attachments: items[0..0]])
                             }
                         }.exceptionHandler { e ->
                             println e
