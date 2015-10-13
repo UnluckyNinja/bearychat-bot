@@ -53,7 +53,7 @@ public class BearychatBot extends GroovyVerticle {
                             log.debug pageString.size()
 
                             def items = []
-                            def sales = page.select('tbody[data-section="dailydeal"]').first().children().each { child ->
+                            def sales = page.select('tbody[data-section="dailydeal"]').first().children().first { child ->
                                 def item = [:]
                                 def (name, link) = child.select('a.b').first().with {
                                     [text(), "https://steampowered.com${attr('href')}"]
@@ -70,7 +70,7 @@ public class BearychatBot extends GroovyVerticle {
                                 def logolink = "https://steamcdn-a.akamaihd.net/steam${child.select('a.b').first().attr('href')}capsule_sm_120.jpg"
                                 def timeleft = child.select('td.timeago').text()
                                 def rating = child.select('span.tooltipped').text()
-                                def title = [name, price, "$discount/$lowest", timeleft + ' left', rating].join(' ')
+                                def title = [name, price, "$discount/$lowest", rating].join(' ')
                                 item.title = title
                                 item.text = link
                                 item.color = color
