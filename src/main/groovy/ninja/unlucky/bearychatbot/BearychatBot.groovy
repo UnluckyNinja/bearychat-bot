@@ -4,6 +4,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.util.logging.Log4j2
 import io.vertx.core.Future
+import io.vertx.groovy.core.buffer.Buffer
 import io.vertx.lang.groovy.GroovyVerticle
 import org.jsoup.Jsoup
 
@@ -66,8 +67,8 @@ public class BearychatBot extends GroovyVerticle {
                                     first().select('b').text()
                                 }
                                 def price = child.select('td.price-final').text()
-                                def logo = child.select('td.applogo').select('a').first().attr('href').replaceFirst($/(/(app|sub))(/\d+/)/$){
-                                    it[1]+'s'+it[3]
+                                def logo = child.select('td.applogo').select('a').first().attr('href').replaceFirst($/(/(app|sub))(/\d+/)/$) {
+                                    it[1] + 's' + it[3]
                                 }
                                 def logolink = "https://steamcdn-a.akamaihd.net/steam${logo}capsule_sm_120.jpg"
                                 def timeleft = child.select('td.timeago').text()
@@ -83,8 +84,11 @@ public class BearychatBot extends GroovyVerticle {
                                 setChunked(true)
                                 setStatusCode(c_res.statusCode())
                                 putHeader 'Content-Type', 'application/json'
-                                log.debug JsonOutput.toJson([text: 'Steam Daily Deals', attachments: items])
-                                write JsonOutput.toJson([text: 'Steam Daily Deals', attachments: items])
+                                def jsonOutput = JsonOutput.toJson([text: 'Steam Daily Deals', attachments: items])
+                                log.debug jsonOutput//JsonOutput.prettyPrint(jsonOutput)
+                                def buffer = Buffer.buffer(jsonOutput, 'UTF-8')
+                                putHeader 'Content-Length', '' + buffer.length()
+                                write buffer
                                 end()
                             }
                         }.exceptionHandler { e ->
