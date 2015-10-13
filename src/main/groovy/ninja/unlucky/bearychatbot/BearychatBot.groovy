@@ -17,7 +17,7 @@ public class BearychatBot extends GroovyVerticle {
     public void start(Future<Void> fut) {
         log.info 'Starting'
         this.jsonSluper = new JsonSlurper()
-        this.server = vertx.createHttpServer()
+        this.server = vertx.createHttpServer(compressionSupported: true)
         this.client = vertx.createHttpClient(ssl: true, trustAll: true, tryUseCompression: true)
         setupServer(server, fut)
         //testClient(client)
@@ -34,7 +34,7 @@ public class BearychatBot extends GroovyVerticle {
                 if (json) log.debug json
                 if (!json || json.subdomain != 'craft_lamplighter') {
                     req.response().with {
-                        putHeader 'content-type', 'text/plain'
+                        putHeader 'Content-Type', 'text/plain'
                         end 'This subdomain is used only for personal bearychat bot'
                     }
                     log.debug 'access denied'
@@ -66,8 +66,10 @@ public class BearychatBot extends GroovyVerticle {
                                     first().select('b').text()
                                 }
                                 def price = child.select('td.price-final').text()
-                                //def logolink = child.select('td.applogo').select('a').first()
-                                def logolink = "https://steamcdn-a.akamaihd.net/steam${child.select('a.b').first().attr('href')}capsule_sm_120.jpg"
+                                def logo = child.select('td.applogo').select('a').first().attr('href').replaceFirst($/(/(app|sub))(/\d+/)/$){
+                                    it[1]+'s'+it[3]
+                                }
+                                def logolink = "https://steamcdn-a.akamaihd.net/steam${logo}capsule_sm_120.jpg"
                                 def timeleft = child.select('td.timeago').text()
                                 def rating = child.select('span.tooltipped').text()
                                 def title = [name, price, "$discount/$lowest", rating].join(' ')
@@ -78,14 +80,17 @@ public class BearychatBot extends GroovyVerticle {
                                 items << item
                             }
                             req.response().with {
-                                putHeader 'content-type', 'application/json'
+                                setChunked(true)
+                                setStatusCode(c_res.statusCode())
+                                putHeader 'Content-Type', 'application/json'
                                 log.debug JsonOutput.toJson([text: 'Steam Daily Deals', attachments: items])
-                                end JsonOutput.toJson([text: 'Steam Daily Deals', attachments: items[0..0]])
+                                write JsonOutput.toJson([text: 'Steam Daily Deals', attachments: items])
+                                end()
                             }
                         }.exceptionHandler { e ->
                             println e
                             req.response().with {
-                                putHeader 'content-type', 'application/json'
+                                putHeader 'Content-Type', 'application/json'
                                 end JsonOutput.toJson([text: '≤È—Ø ß∞‹'])
                             }
                         }
