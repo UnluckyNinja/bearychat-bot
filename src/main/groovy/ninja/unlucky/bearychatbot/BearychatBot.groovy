@@ -23,7 +23,7 @@ public class BearychatBot extends GroovyVerticle {
         setupClient(client)
         log.info 'Started'
     }
-    cookie = ''
+    def cookie = ''
     def setupServer(server, fut){
         server.requestHandler{ req ->
             println 'request received!'
@@ -48,7 +48,7 @@ public class BearychatBot extends GroovyVerticle {
                         c_res.bodyHandler{ c_res_buffer ->
                             def pageString = c_res_buffer.toString('UTF-8')
                             def page = Jsoup.parse(pageString)
-                            log.debug pageString
+                            log.debug pageString.size()
                             def items = []
                             def sales = page.select('tbody[data-section="dailydeal"]')
                                             .first().children().each{ child ->
