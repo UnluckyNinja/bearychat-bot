@@ -54,7 +54,7 @@ public class BearychatBot extends GroovyVerticle {
                         }
                         c_res.bodyHandler { c_res_buffer ->
                             def pageString = c_res_buffer.toString("UTF-8")
-                            def page = Jsoup.parse(pageString)
+                            def page = Jsoup.parse(pageString,'http://steamdb.info/')
                             log.debug pageString.size()
                             def text = ""
                             def items = []
@@ -129,17 +129,15 @@ public class BearychatBot extends GroovyVerticle {
                             packtpub_cookie = c_res.cookies().collect { it.split(';\\s') }.flatten().unique().join('; ')
                         }
                         c_res.bodyHandler { c_res_buffer ->
+                            def domain = 'https://www.packtpub.com'
                             def pageString = c_res_buffer.toString("UTF-8")
-                            def page = Jsoup.parse(pageString)
+                            def page = Jsoup.parse(pageString, domain)
                             log.debug pageString.size()
                             def text = ""
                             def items = []
-                            def domain = 'https://www.packtpub.com'
                             page.select('div.dotd-main-book.cf').first().children().each { child ->
                                 def item = [:]
                                 def name = child.select('div.dotd-title').first().text()
-                                log.debug child.select('div.dotd-main-book-image.float-left').first().select('a').first().html()
-                                log.debug child.select('div.dotd-main-book-image.float-left').first().select('a').first().attr('href')
                                 log.debug child.select('div.dotd-main-book-image.float-left').first().select('a').first().attr('abs:href')
                                 def (booklink, imagelink) = child.select('div.dotd-main-book-image.float-left').first().select('a').first().with {
                                     [attr('abs:href'), select('img').attr('abs:src')]
