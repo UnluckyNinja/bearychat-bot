@@ -9,6 +9,7 @@ import io.vertx.groovy.core.http.HttpClient
 import io.vertx.groovy.core.http.HttpServer
 import io.vertx.lang.groovy.GroovyVerticle
 import org.jsoup.Jsoup
+import org.jsoup.select.Elements
 
 @Log4j2
 public class BearychatBot extends GroovyVerticle {
@@ -141,7 +142,7 @@ public class BearychatBot extends GroovyVerticle {
                                     [attr('abs:href'), select('img').attr('abs:src')]
                                 }
                                 def color = '#D92238'
-                                def description = child.select('div.dotd-main-book-summary.float-left').first().children().select('div')[2..3].text()
+                                def description = (child.select('div.dotd-main-book-summary.float-left').first().children().select('div')[2..3] as Elements).text()
                                 def claimlink = child.select('a.twelve-days-claim').attr('abs:href')
                                 item.title = "[$name]($booklink)"
                                 item.text = "$description\n[Click to claim this ebook]($claimlink)"
