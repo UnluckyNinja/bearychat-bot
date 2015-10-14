@@ -79,7 +79,7 @@ public class BearychatBot extends GroovyVerticle {
                                 def logolink = "https://steamcdn-a.akamaihd.net/steam${logo}capsule_sm_120.jpg"
                                 def timeleft = child.select('td.timeago').text()
                                 def rating = child.select('span.tooltipped').text()
-                                def title = [name, price, "$discount/$lowest", rating].join(' ')
+                                def title = [name, price, "$discount/$lowest", ":+1:/:-1:$rating"].join(' ')
                                 item.title = title
                                 item.text = link
                                 item.color = color
