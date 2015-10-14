@@ -35,7 +35,9 @@ public class BearychatBot extends GroovyVerticle {
             log.debug 'Request received!'
             def json
             req.bodyHandler { req_buffer ->
-                json = jsonSluper.parseText req_buffer.toString("UTF-8") ?: '{}'
+                if(req.getHeader('content-type') == 'application/json'){
+                    json = jsonSluper.parseText req_buffer.toString("UTF-8") ?: '{}'
+                }
                 if (json) log.debug json
                 if (!json || json.subdomain != 'craft_lamplighter') {
                     req.response().with {
