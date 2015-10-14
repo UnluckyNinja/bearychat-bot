@@ -31,7 +31,7 @@ public class BearychatBot extends GroovyVerticle {
 
     def setupServer(server, fut) {
         server.requestHandler { req ->
-            println 'request received!'
+            log.debug 'Request received!'
             def json
             req.bodyHandler { req_buffer ->
                 json = jsonSluper.parseText req_buffer.toString("UTF-8") ?: '{}'
@@ -92,7 +92,7 @@ public class BearychatBot extends GroovyVerticle {
                                 end buffer
                             }
                         }.exceptionHandler { e ->
-                            println e
+                            log.warning e
                             req.response().with {
                                 putHeader 'Content-Type', 'application/json'
                                 end JsonOutput.toJson([text: '查询失败'])
@@ -158,7 +158,7 @@ public class BearychatBot extends GroovyVerticle {
                                 end buffer
                             }
                         }.exceptionHandler { e ->
-                            println e
+                            log.warning e
                             req.response().with {
                                 putHeader 'Content-Type', 'application/json'
                                 end JsonOutput.toJson([text: '查询失败'])
