@@ -138,7 +138,9 @@ public class BearychatBot extends GroovyVerticle {
                             page.select('div.dotd-main-book.cf').first().children().each { child ->
                                 def item = [:]
                                 def name = child.select('div.dotd-title').first().text()
-                                log.debug child.select('div.dotd-main-book-image.float-left').first().select('a').html()
+                                log.debug child.select('div.dotd-main-book-image.float-left').first().select('a').first().html()
+                                log.debug child.select('div.dotd-main-book-image.float-left').first().select('a').first().html().attr('href')
+                                log.debug child.select('div.dotd-main-book-image.float-left').first().select('a').first().html().attr('abs:href')
                                 def (booklink, imagelink) = child.select('div.dotd-main-book-image.float-left').first().select('a').first().with {
                                     [attr('abs:href'), select('img').attr('abs:src')]
                                 }
