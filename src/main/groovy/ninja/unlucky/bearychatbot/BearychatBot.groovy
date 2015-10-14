@@ -72,8 +72,7 @@ public class BearychatBot extends GroovyVerticle {
                                     color = '#9E9E9E'
                                     first().select('b').text()
                                 }
-                                log.debug child.select('td.price-final').html()
-                                def price = child.select('td[class^=price-discount] td').first().text()
+                                def price = child.select('td[class^=price-discount] ~ td').first().text()
                                 def logo = child.select('td.applogo').select('a').first().attr('href').replaceFirst($/(/(app|sub))(/\d+/)/$) {
                                     it[1] + 's' + it[3]
                                 }
