@@ -92,7 +92,7 @@ public class BearychatBot extends GroovyVerticle {
                                 end buffer
                             }
                         }.exceptionHandler { e ->
-                            log.warning e
+                            log.warn e
                             req.response().with {
                                 putHeader 'Content-Type', 'application/json'
                                 end JsonOutput.toJson([text: '查询失败'])
@@ -138,12 +138,12 @@ public class BearychatBot extends GroovyVerticle {
                                 def item = [:]
                                 def name = child.select('div.dotd-title').first().text()
                                 def (booklink, imagelink) = child.select('dotd-main-book-image float-left').select('a').first().with {
-                                    [domain + attr('href'), 'https:' + select('img').attr('src')]
+                                    [attr('abs:href'), select('img').attr('abs:src')]
                                 }
                                 def color = '#D92238'
                                 def description = child.select('div.dotd-main-book-summary.float-left').first().children().select('div')[2..3].text()
-                                def claimlink = domain + child.select('a.twelve-days-claim').attr('href')
-                                item.title = "[$name](booklink)"
+                                def claimlink = child.select('a.twelve-days-claim').attr('abs:href')
+                                item.title = "[$name]($booklink)"
                                 item.text = "$description\n[Click to claim this ebook]($claimlink)"
                                 item.color = color
                                 item.images = [[url: imagelink]]
@@ -158,7 +158,7 @@ public class BearychatBot extends GroovyVerticle {
                                 end buffer
                             }
                         }.exceptionHandler { e ->
-                            log.warning e
+                            log.warn e
                             req.response().with {
                                 putHeader 'Content-Type', 'application/json'
                                 end JsonOutput.toJson([text: '查询失败'])
