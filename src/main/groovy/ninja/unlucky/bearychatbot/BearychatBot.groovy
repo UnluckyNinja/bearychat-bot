@@ -5,15 +5,17 @@ import groovy.json.JsonSlurper
 import groovy.util.logging.Log4j2
 import io.vertx.core.Future
 import io.vertx.groovy.core.buffer.Buffer
+import io.vertx.groovy.core.http.HttpClient
+import io.vertx.groovy.core.http.HttpServer
 import io.vertx.lang.groovy.GroovyVerticle
 import org.jsoup.Jsoup
 
 @Log4j2
 public class BearychatBot extends GroovyVerticle {
 
-    def jsonSluper
-    def server
-    def client
+    JsonSlurper jsonSluper
+    HttpServer server
+    HttpClient client
 
     public void start(Future<Void> fut) {
         log.info 'Starting'
@@ -24,7 +26,8 @@ public class BearychatBot extends GroovyVerticle {
         testClient(client)
         log.info 'Started'
     }
-    def cookie = ''
+    def steamdb_cookie = ''
+    def packtpub_cookie = ''
 
     def setupServer(server, fut) {
         server.requestHandler { req ->
@@ -45,8 +48,8 @@ public class BearychatBot extends GroovyVerticle {
                 if (options[0] == 'steam') {
                     this.client.get(443, 'steamdb.info', '/sales/') { c_res ->
                         debugResponse(c_res)
-                        if (!cookie && c_res.cookies()) {
-                            cookie = c_res.cookies().join(' ')
+                        if (c_res.cookies()) {
+                            steamdb_cookie = c_res.cookies().collect { it.split(';\\s') }.flatten().unique().join('; ')
                         }
                         c_res.bodyHandler { c_res_buffer ->
                             def pageString = c_res_buffer.toString("UTF-8")
@@ -54,7 +57,7 @@ public class BearychatBot extends GroovyVerticle {
                             log.debug pageString.size()
 
                             def items = []
-                            def sales = page.select('tbody[data-section="dailydeal"]').first().children().each { child ->
+                            page.select('tbody[data-section="dailydeal"]').first().children().each { child ->
                                 def item = [:]
                                 def (name, link) = child.select('a.b').first().with {
                                     [text(), "https://steampowered.com${attr('href')}"]
@@ -85,7 +88,7 @@ public class BearychatBot extends GroovyVerticle {
                                 log.debug jsonOutput//JsonOutput.prettyPrint(jsonOutput)
                                 def buffer = Buffer.buffer(jsonOutput, 'UTF-8')
                                 putHeader 'Content-Type', 'application/json'
-                                putHeader 'Content-Length', ''+buffer.length()
+                                putHeader 'Content-Length', '' + buffer.length()
                                 end buffer
                             }
                         }.exceptionHandler { e ->
@@ -100,8 +103,8 @@ public class BearychatBot extends GroovyVerticle {
                         putHeader 'accept-encoding', 'gzip, deflate, sdch'
                         putHeader 'accept-language', 'zh-CN,zh;q=0.8,en;q=0.6,zh-TW;q=0.4,ja;q=0.2'
                         putHeader 'cache-control', 'max-age=0'
-                        if (cookie) {
-                            putHeader 'cookie', cookie
+                        if (steamdb_cookie) {
+                            putHeader 'cookie', steamdb_cookie
                         }
                         putHeader 'dnt', '1'
                         putHeader 'referer', 'https://steamdb.info/'
@@ -114,9 +117,66 @@ public class BearychatBot extends GroovyVerticle {
                         log.debug jsonOutput//JsonOutput.prettyPrint(jsonOutput)
                         def buffer = Buffer.buffer(jsonOutput, 'UTF-8')
                         putHeader 'Content-Type', 'application/json'
-                        putHeader 'Content-Length', ''+buffer.length()
+                        putHeader 'Content-Length', '' + buffer.length()
                         end buffer
                     }
+                } else if (options[0] == 'ebook') {
+
+                    this.client.get(443, 'www.packtpub.com', '/packt/offers/free-learning') { c_res ->
+                        debugResponse(c_res)
+                        if (c_res.cookies()) {
+                            packtpub_cookie = c_res.cookies().collect { it.split(';\\s') }.flatten().unique().join('; ')
+                        }
+                        c_res.bodyHandler { c_res_buffer ->
+                            def pageString = c_res_buffer.toString("UTF-8")
+                            def page = Jsoup.parse(pageString)
+                            log.debug pageString.size()
+
+                            def items = []
+                            def domain = 'https://www.packtpub.com'
+                            page.select('div.dotd-main-book.cf').first().children().each { child ->
+                                def item = [:]
+                                def name = child.select('div.dotd-title').first().text()
+                                def (booklink, imagelink) = child.select('dotd-main-book-image float-left').select('a').first().with {
+                                    [domain + attr('href'), 'https:' + select('img').attr('src')]
+                                }
+                                def color = '#D92238'
+                                def description = child.select('div.dotd-main-book-summary.float-left').first().children().select('div')[2..3].text()
+                                def claimlink = domain + child.select('a.twelve-days-claim').attr('href')
+                                item.title = "[$name](booklink)"
+                                item.text = "$description\n[Click to claim this ebook]($claimlink)"
+                                item.color = color
+                                item.images = [[url: imagelink]]
+                                items << item
+                            }
+                            req.response().with {
+                                def jsonOutput = JsonOutput.toJson([text: 'Packtpub Free Ebook', attachments: items])
+                                log.debug jsonOutput//JsonOutput.prettyPrint(jsonOutput)
+                                def buffer = Buffer.buffer(jsonOutput, 'UTF-8')
+                                putHeader 'Content-Type', 'application/json'
+                                putHeader 'Content-Length', '' + buffer.length()
+                                end buffer
+                            }
+                        }.exceptionHandler { e ->
+                            println e
+                            req.response().with {
+                                putHeader 'Content-Type', 'application/json'
+                                end JsonOutput.toJson([text: '查询失败'])
+                            }
+                        }
+                    }.with {
+                        putHeader 'accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+                        putHeader 'accept-encoding', 'gzip, deflate, sdch'
+                        putHeader 'accept-language', 'zh-CN,zh;q=0.8,en;q=0.6,zh-TW;q=0.4,ja;q=0.2'
+                        putHeader 'cache-control', 'max-age=0'
+                        if (packtpub_cookie) {
+                            putHeader 'cookie', packtpub_cookie
+                        }
+                        putHeader 'dnt', '1'
+                        putHeader 'referer', 'https://www.packtpub.com/'
+                        putHeader 'upgrade-insecure-requests', '1'
+                        putHeader 'user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'
+                    }.end()
                 }
             }
             debugRequest(req)
@@ -130,19 +190,7 @@ public class BearychatBot extends GroovyVerticle {
     }
 
     def testClient(client) {
-        vertx.createHttpClient(tryUseCompression: true).post(80, 'localhost', '/') { c_res ->
-            c_res.bodyHandler{ c_res_buffer ->
-                log.debug c_res_buffer.toString("UTF-8")
-                def json = jsonSluper.parseText c_res_buffer.toString("UTF-8") ?: '{}'
-                log.debug json
-            }
-        }.with{
-            putHeader 'Connection', 'close'
-            putHeader 'content-type', 'application/json'
-            putHeader 'accept-encoding', 'gzip, deflate'
-            putHeader 'Host', 'bearychat-bot.unlucky.ninja'
-            putHeader 'User-Agent', 'Apache-HttpClient/4.3.3 (java 1.5)'
-        }.end('{"channel_name":"Test", "subdomain":"craft_lamplighter", "text":"bot steam", "token":"ac94dcb43c0755e81a228c89da24304c", "trigger_word":"bot", "ts":"1444753845518", "user_name": "UnluckyNinja" }')
+
     }
 
     def debugRequest(req) {
