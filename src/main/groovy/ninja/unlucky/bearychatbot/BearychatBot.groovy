@@ -146,7 +146,7 @@ public class BearychatBot extends GroovyVerticle {
                                 }
                                 def color = '#D92238'
                                 def description = child.select('div.dotd-main-book-summary.float-left').first().children().select('div').with {
-                                    delegate[2].text() + '\n' + delegate[3].select('ul').first().children().collect {
+                                    delegate[2].text() + '\n' + delegate[3].select('ul')?.first().children().collect {
                                         '* ' + it.text()
                                     }.join('\n')
                                 }
