@@ -151,7 +151,7 @@ public class BearychatBot extends GroovyVerticle {
                                 def claimlink = child.select('a.twelve-days-claim').attr('abs:href')
                                 text = "**Packtpub Free Ebook**\n[$name]($booklink)"
                                 item.title = name
-                                item.text = "$description\n[Click to claim this ebook]($claimlink)"
+                                item.text = "$description\n[Click here to claim this ebook(signin first if not)]($claimlink)"
                                 item.color = color
                                 item.images = [[url: imagelink]]
                                 items << item
