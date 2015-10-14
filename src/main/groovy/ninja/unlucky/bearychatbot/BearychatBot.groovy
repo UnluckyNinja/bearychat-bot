@@ -9,7 +9,7 @@ import io.vertx.groovy.core.http.HttpClient
 import io.vertx.groovy.core.http.HttpServer
 import io.vertx.lang.groovy.GroovyVerticle
 import org.jsoup.Jsoup
-import org.jsoup.select.Elements
+import org.jsoup.nodes.Element
 
 @Log4j2
 public class BearychatBot extends GroovyVerticle {
@@ -54,7 +54,7 @@ public class BearychatBot extends GroovyVerticle {
                         }
                         c_res.bodyHandler { c_res_buffer ->
                             def pageString = c_res_buffer.toString("UTF-8")
-                            def page = Jsoup.parse(pageString,'http://steamdb.info/')
+                            def page = Jsoup.parse(pageString, 'http://steamdb.info/')
                             log.debug pageString.size()
                             def text = ""
                             def items = []
@@ -135,7 +135,7 @@ public class BearychatBot extends GroovyVerticle {
                             log.debug pageString.size()
                             def text = ""
                             def items = []
-                            page.select('div.dotd-main-book.cf').first().children().each { child ->
+                            page.select('div.dotd-main-book.cf').first().children().each { Element child ->
                                 def item = [:]
                                 def name = child.select('div.dotd-title').first().text()
                                 log.debug child.select('div.dotd-main-book-image.float-left').first().select('a').first().attr('abs:href')
@@ -143,7 +143,11 @@ public class BearychatBot extends GroovyVerticle {
                                     [attr('abs:href'), select('img').attr('abs:src')]
                                 }
                                 def color = '#D92238'
-                                def description = (child.select('div.dotd-main-book-summary.float-left').first().children().select('div')[2..3] as Elements).text()
+                                def description = child.select('div.dotd-main-book-summary.float-left').first().children().select('div').with {
+                                    delegate[2].text() + '\n' + delegate[3].select('ul').first().children().collect {
+                                        '* ' + it.text() + '\n'
+                                    }
+                                }
                                 def claimlink = child.select('a.twelve-days-claim').attr('abs:href')
                                 text = "**Packtpub Free Ebook**\n[$name]($booklink)"
                                 item.title = name
