@@ -35,7 +35,7 @@ public class BearychatBot extends GroovyVerticle {
             log.debug 'Request received!'
             def json
             req.bodyHandler { req_buffer ->
-                if(req.getHeader('content-type') == 'application/json'){
+                if (req.getHeader('content-type') == 'application/json') {
                     json = jsonSluper.parseText req_buffer.toString("UTF-8") ?: '{}'
                 }
                 if (json) log.debug json
@@ -63,7 +63,7 @@ public class BearychatBot extends GroovyVerticle {
                             page.select('tbody[data-section="dailydeal"]').first().children().each { child ->
                                 def item = [:]
                                 def (name, link) = child.select('a.b').first().with {
-                                    [text(), "https://steampowered.com${attr('href')}"]
+                                    [delegate.text(), "https://steampowered.com${attr('href')}"]
                                 }
                                 def discount = child.select('td[class^=price-discount]').first().text()
                                 def color = '#8BC34A'
