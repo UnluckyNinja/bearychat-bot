@@ -56,7 +56,7 @@ public class BearychatBot extends GroovyVerticle {
                             def pageString = c_res_buffer.toString("UTF-8")
                             def page = Jsoup.parse(pageString)
                             log.debug pageString.size()
-
+                            def text = ""
                             def items = []
                             page.select('tbody[data-section="dailydeal"]').first().children().each { child ->
                                 def item = [:]
@@ -132,7 +132,7 @@ public class BearychatBot extends GroovyVerticle {
                             def pageString = c_res_buffer.toString("UTF-8")
                             def page = Jsoup.parse(pageString)
                             log.debug pageString.size()
-
+                            def text = ""
                             def items = []
                             def domain = 'https://www.packtpub.com'
                             page.select('div.dotd-main-book.cf').first().children().each { child ->
@@ -147,14 +147,15 @@ public class BearychatBot extends GroovyVerticle {
                                 def color = '#D92238'
                                 def description = (child.select('div.dotd-main-book-summary.float-left').first().children().select('div')[2..3] as Elements).text()
                                 def claimlink = child.select('a.twelve-days-claim').attr('abs:href')
-                                item.title = "[$name]($booklink)"
+                                text = "**Packtpub Free Ebook**\n[$name]($booklink)"
+                                item.title = name
                                 item.text = "$description\n[Click to claim this ebook]($claimlink)"
                                 item.color = color
                                 item.images = [[url: imagelink]]
                                 items << item
                             }
                             req.response().with {
-                                def jsonOutput = JsonOutput.toJson([text: 'Packtpub Free Ebook', attachments: items])
+                                def jsonOutput = JsonOutput.toJson([text: text, attachments: items])
                                 log.debug jsonOutput//JsonOutput.prettyPrint(jsonOutput)
                                 def buffer = Buffer.buffer(jsonOutput, 'UTF-8')
                                 putHeader 'Content-Type', 'application/json'
