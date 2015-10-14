@@ -145,8 +145,8 @@ public class BearychatBot extends GroovyVerticle {
                                 def color = '#D92238'
                                 def description = child.select('div.dotd-main-book-summary.float-left').first().children().select('div').with {
                                     delegate[2].text() + '\n' + delegate[3].select('ul').first().children().collect {
-                                        '* ' + it.text() + '\n'
-                                    }
+                                        '* ' + it.text()
+                                    }.join('\n')
                                 }
                                 def claimlink = child.select('a.twelve-days-claim').attr('abs:href')
                                 text = "**Packtpub Free Ebook**\n[$name]($booklink)"
