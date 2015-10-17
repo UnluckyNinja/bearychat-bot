@@ -6,7 +6,6 @@ import groovy.util.logging.Log4j2
 
 import io.vertx.core.Future
 import io.vertx.core.http.HttpServerRequest
-import io.vertx.core.http.HttpServerResponse
 import io.vertx.groovy.core.buffer.Buffer
 import io.vertx.groovy.core.http.HttpClient
 import io.vertx.groovy.core.http.HttpServer
@@ -21,7 +20,6 @@ import ninja.unlucky.bearychatbot.command.WebAccessor
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
 
 import java.lang.reflect.Method
 
@@ -31,7 +29,7 @@ public class BearychatBot extends GroovyVerticle {
     JsonSlurper jsonSluper
     HttpServer server
     HttpClient client
-    private LinkedHashMap<String, Method> methods = [:].asSynchronized()
+    private LinkedHashMap<String, Method> commands = [:].asSynchronized()
     private LinkedHashMap<String, WebAccessor> accessors = [:].asSynchronized()
     private LinkedHashMap<String, String> cookies = [:]
 
@@ -64,7 +62,7 @@ public class BearychatBot extends GroovyVerticle {
                     return
                 }
                 String[] options = json.text.split('\\s').tail()
-                def method = methods.get(options[0])
+                def method = commands.get(options[0])
                 def accessor = accessors.get(options[0])
                 def cookie = cookies.get(options[0])
                 if (method) {
@@ -150,7 +148,7 @@ public class BearychatBot extends GroovyVerticle {
         methods.each {
             def accessor = it.getAnnotation(WebAccessor)
             def name = it.getAnnotation(Command).name()
-            this.methods.put(name, it)
+            this.commands.put(name, it)
             if (accessor) this.accessors.put(name, accessor)
         }
     }
