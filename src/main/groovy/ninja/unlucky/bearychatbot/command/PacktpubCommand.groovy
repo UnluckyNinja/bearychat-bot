@@ -1,11 +1,13 @@
 package ninja.unlucky.bearychatbot.command
 
+import groovy.util.logging.Log4j2
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
 /**
  * Created by UnluckyNinja on 2015/10/18.
  */
+@Log4j2
 class PacktpubCommand implements CommandExecutor {
 
     @Command(name = 'ebook')

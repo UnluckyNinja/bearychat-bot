@@ -1,11 +1,12 @@
 package ninja.unlucky.bearychatbot.command
 
-import groovy.transform.TypeChecked
+import groovy.util.logging.Log4j2
 import org.jsoup.nodes.Document
 
 /**
  * Created by UnluckyNinja on 2015/10/17.
  */
+@Log4j2
 class SteamCommand implements CommandExecutor {
 
     @Command(name = 'steam')
