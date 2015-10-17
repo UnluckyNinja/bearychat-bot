@@ -17,7 +17,7 @@ class SteamCommand implements CommandExecutor {
         doc.select('tbody[data-section="dailydeal"]').first().children().each { child ->
             def item = [:]
             def (name, link) = child.select('a.b').first().with {
-                [delegate.text(), "https://steampowered.com${attr('href')}"]
+                [delegate.text(), "https://www.steampowered.com${attr('href')}"]
             }
             def discount = child.select('td[class^=price-discount]').first().text()
             def color = '#8BC34A'
@@ -33,13 +33,12 @@ class SteamCommand implements CommandExecutor {
             def logolink = "https://steamcdn-a.akamaihd.net/steam${logo}capsule_sm_120.jpg"
             def timeleft = child.select('td.timeago').text()
             def rating = child.select('span.tooltipped').text()
-            def title = [name, price, "$discount/$lowest", ":+1:/:-1:$rating"].join(' ')
+            def title = [name, price, "$discount/$lowest", "Rating:$rating"].join(' ')
             item.title = title
             item.text = link
             item.color = color
             item.images = [[url: logolink]]
             items << item
-            def a = ~/\s/
 
         }
         [text: text, attachments: items]
