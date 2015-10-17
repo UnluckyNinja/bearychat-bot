@@ -17,7 +17,7 @@ class SteamCommand implements CommandExecutor {
         doc.select('tbody[data-section="dailydeal"]').first().children().each { child ->
             def item = [:]
             def (name, link) = child.select('a.b').first().with {
-                [delegate.text(), "https://www.steampowered.com${attr('href')}"]
+                [delegate.text(), "https://store.steampowered.com${attr('href')}"]
             }
             def discount = child.select('td[class^=price-discount]').first().text()
             def color = '#8BC34A'
