@@ -45,7 +45,7 @@ public class BearychatBot extends GroovyVerticle {
     }
 
     def setupServer(server, fut) {
-        server.requestHandler { HttpServerRequest req ->
+        server.requestHandler { req ->
             log.debug 'Request received!'
             def json
             req.bodyHandler { req_buffer ->
@@ -66,7 +66,7 @@ public class BearychatBot extends GroovyVerticle {
                 def accessor = accessors.get(options[0])
                 def cookie = cookies.get(options[0])
                 if (method) {
-                    if(accessor) {
+                    if (accessor) {
                         this.client."${accessor.type()}"(accessor.port(), accessor.host(), accessor.requestURI()) { c_res ->
                             debugResponse(c_res)
                             if (c_res.cookies()) {
@@ -105,7 +105,7 @@ public class BearychatBot extends GroovyVerticle {
 
                         setResponse(req, result)
                     }
-                }else{
+                } else {
                     setResponse(req, [text: '命令未定义'])
                 }
             }
@@ -119,7 +119,7 @@ public class BearychatBot extends GroovyVerticle {
         }
     }
 
-    private void setResponse(HttpServerRequest req, Map json){
+    private void setResponse(HttpServerRequest req, Map json) {
         req.response().with {
             def jsonOutput = JsonOutput.toJson(json)
             log.debug jsonOutput//JsonOutput.prettyPrint(jsonOutput)
@@ -154,7 +154,7 @@ public class BearychatBot extends GroovyVerticle {
     }
 
     void registerCommands(Class<? extends CommandExecutor>[] classes) {
-        classes.each {registerCommands(it)}
+        classes.each { registerCommands(it) }
     }
 
     def testClient(client) {
