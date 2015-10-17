@@ -67,7 +67,7 @@ public class BearychatBot extends GroovyVerticle {
                 def cookie = cookies.get(options[0])
                 if (method) {
                     if (accessor) {
-                        this.client."${accessor.type()}"(accessor.port(), accessor.host(), accessor.requestURI()) { c_res ->
+                        this.client."${accessor.type()}"(accessor.port(), accessor.host().replaceFirst(/https?:\/\//, ''), accessor.requestURI()) { c_res ->
                             debugResponse(c_res)
                             if (c_res.cookies()) {
                                 cookie = c_res.cookies().collect { it.split(';\\s') }.flatten().unique().join('; ')
