@@ -31,8 +31,8 @@ public class BearychatBot extends GroovyVerticle {
     JsonSlurper jsonSluper
     HttpServer server
     HttpClient client
-    private LinkedHashMap<String, Method> methods = [:]
-    private LinkedHashMap<String, WebAccessor> accessors = [:]
+    private LinkedHashMap<String, Method> methods = [:].asSynchronized()
+    private LinkedHashMap<String, WebAccessor> accessors = [:].asSynchronized()
     private LinkedHashMap<String, String> cookies = [:]
 
     public void start(Future<Void> fut) {
