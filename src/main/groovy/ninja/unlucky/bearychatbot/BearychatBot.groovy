@@ -5,7 +5,7 @@ import groovy.json.JsonSlurper
 import groovy.util.logging.Log4j2
 
 import io.vertx.core.Future
-import io.vertx.core.http.HttpServerRequest
+import io.vertx.groovy.core.http.HttpServerRequest
 import io.vertx.groovy.core.buffer.Buffer
 import io.vertx.groovy.core.http.HttpClient
 import io.vertx.groovy.core.http.HttpServer
@@ -29,9 +29,9 @@ public class BearychatBot extends GroovyVerticle {
     JsonSlurper jsonSluper
     HttpServer server
     HttpClient client
-    private LinkedHashMap<String, Method> commands = [:].asSynchronized()
-    private LinkedHashMap<String, WebAccessor> accessors = [:].asSynchronized()
-    private LinkedHashMap<String, String> cookies = [:]
+    private Map<String, Closure> commands = [:].asSynchronized()
+    private Map<String, WebAccessor> accessors = [:].asSynchronized()
+    private Map<String, String> cookies = [:].asSynchronized()
 
     public void start(Future<Void> fut) {
         log.info 'Starting'
@@ -47,7 +47,7 @@ public class BearychatBot extends GroovyVerticle {
     def setupServer(server, fut) {
         server.requestHandler { req ->
             log.debug 'Request received!'
-            def json
+            Map json
             req.bodyHandler { req_buffer ->
                 if (req.getHeader('content-type') == 'application/json') {
                     json = jsonSluper.parseText(req_buffer.toString("UTF-8") ?: '{}')
@@ -77,7 +77,7 @@ public class BearychatBot extends GroovyVerticle {
                                 def pageString = c_res_buffer.toString("UTF-8")
                                 def page = Jsoup.parse(pageString, accessor.host())
                                 log.debug pageString.size()
-                                Map result = method.invoke(json, page) as Map // the working method
+                                Map result = method(json, page) as Map // the working method
 
                                 setResponse(req, result)
                             }.exceptionHandler { e ->
@@ -101,7 +101,7 @@ public class BearychatBot extends GroovyVerticle {
                             putHeader 'user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'
                         }.end()
                     } else {
-                        Map result = method.invoke(json) as Map
+                        Map result = method(json) as Map
 
                         setResponse(req, result)
                     }
@@ -144,11 +144,12 @@ public class BearychatBot extends GroovyVerticle {
         if (!methods) {
             throw new NoSuchMethodException("Class($clazz.name) you want to register doesn't have any satisfied method.")
         }
+        def instance = clazz.newInstance()
 
         methods.each {
             def accessor = it.getAnnotation(WebAccessor)
             def name = it.getAnnotation(Command).name()
-            this.commands.put(name, it)
+            this.commands.put(name, it.&invoke.curry(instance))
             if (accessor) this.accessors.put(name, accessor)
         }
     }
