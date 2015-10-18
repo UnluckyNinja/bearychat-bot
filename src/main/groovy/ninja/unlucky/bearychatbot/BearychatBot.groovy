@@ -51,7 +51,11 @@ public class BearychatBot extends GroovyVerticle {
                     log.debug 'access denied'
                     return
                 }
-                String[] options = json.text.split('\\s').tail()
+                String[] options = json.text.split('\\s')
+                if(options[0] != 'bot' || options.size() < 2){
+                    setResponse(req, [])
+                }
+                options = options.tail()
                 def method = commands.get(options[0])
                 def accessor = accessors.get(options[0])
                 def cookie = cookies.get(options[0])
