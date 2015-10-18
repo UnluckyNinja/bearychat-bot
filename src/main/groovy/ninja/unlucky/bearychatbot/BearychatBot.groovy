@@ -3,25 +3,15 @@ package ninja.unlucky.bearychatbot
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.util.logging.Log4j2
-
 import io.vertx.core.Future
-import io.vertx.groovy.core.http.HttpServerRequest
 import io.vertx.groovy.core.buffer.Buffer
 import io.vertx.groovy.core.http.HttpClient
 import io.vertx.groovy.core.http.HttpServer
+import io.vertx.groovy.core.http.HttpServerRequest
 import io.vertx.lang.groovy.GroovyVerticle
-
-import ninja.unlucky.bearychatbot.command.Command
-import ninja.unlucky.bearychatbot.command.CommandExecutor
-import ninja.unlucky.bearychatbot.command.PacktpubCommand
-import ninja.unlucky.bearychatbot.command.PingCommand
-import ninja.unlucky.bearychatbot.command.SteamCommand
-import ninja.unlucky.bearychatbot.command.WebAccessor
-
+import ninja.unlucky.bearychatbot.command.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-
-import java.lang.reflect.Method
 
 @Log4j2
 public class BearychatBot extends GroovyVerticle {
@@ -106,7 +96,7 @@ public class BearychatBot extends GroovyVerticle {
                         setResponse(req, result)
                     }
                 } else {
-                    setResponse(req, [text: '命令未定义'])
+                    setResponse(req, [text: "未设置 '${options[0]}' 命令"])
                 }
             }
             debugRequest(req)
