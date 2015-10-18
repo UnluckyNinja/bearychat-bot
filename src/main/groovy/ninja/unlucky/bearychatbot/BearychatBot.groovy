@@ -37,8 +37,8 @@ public class BearychatBot extends GroovyVerticle {
     def setupServer(server, fut) {
         server.requestHandler { req ->
             log.debug 'Request received!'
-            Map json
             req.bodyHandler { req_buffer ->
+                def json
                 if (req.getHeader('content-type') == 'application/json') {
                     json = jsonSluper.parseText(req_buffer.toString("UTF-8") ?: '{}')
                 }
