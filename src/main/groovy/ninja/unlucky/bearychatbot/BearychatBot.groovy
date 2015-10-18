@@ -53,7 +53,7 @@ public class BearychatBot extends GroovyVerticle {
                 }
                 String[] options = json.text.split('\\s')
                 if(options[0] != 'bot' || options.size() < 2){
-                    setResponse(req, [:])
+                    req.response().close()
                     return
                 }
                 options = options.tail()
