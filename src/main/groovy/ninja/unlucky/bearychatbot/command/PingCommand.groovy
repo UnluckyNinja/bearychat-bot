@@ -8,7 +8,7 @@ import groovy.util.logging.Log4j2
 @Log4j2
 class PingCommand implements CommandExecutor{
     @Command(name='ping')
-    Map ping(Map map){
+    Map ping(final String[] options){
         return [text: 'Pong!']
     }
 }

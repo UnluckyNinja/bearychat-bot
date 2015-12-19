@@ -1,25 +1,25 @@
-buildscript {
-    repositories { jcenter() }
-    dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.2'
+plugins {
+    id 'java'
+    id 'groovy'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '1.2.2'
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url = 'http://oss.sonatype.org/content/repositories/snapshots/'
     }
 }
 
-apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'groovy'
-
 ext{
-    vertxVersion = '3.1.0'
+    vertxVersion = '3.2.0'
 }
+sourceCompatibility = '1.8'
 
 version = '0.1.0-SNAPSHOT'
 
-if (!JavaVersion.current().java8Compatible) {
-    throw new IllegalStateException('''A Haiku:
-                                      |  This needs Java 8,
-                                      |  You are using something else,
-                                      |  Refresh. Try again.'''.stripMargin())
-}
+mainClassName = 'io.vertx.core.Launcher'
 
 repositories {
     mavenCentral()
@@ -31,6 +31,7 @@ repositories {
 dependencies {
     compile "io.vertx:vertx-core:$vertxVersion"
     compile "io.vertx:vertx-lang-groovy:$vertxVersion"
+
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.4'
     compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.4'
     compile group: 'org.jsoup', name: 'jsoup', version: '1.8.3'
@@ -43,7 +44,6 @@ processResources {
 shadowJar {
     classifier = 'fat'
     manifest {
-        attributes 'Main-Class': 'io.vertx.core.Starter'
         attributes 'Main-Verticle': 'groovy:ninja.unlucky.bearychatbot.BearychatBot'
     }
     mergeServiceFiles {
@@ -52,5 +52,5 @@ shadowJar {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.7'
+    gradleVersion = '2.9'
 }
