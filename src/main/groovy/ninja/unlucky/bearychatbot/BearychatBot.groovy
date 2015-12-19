@@ -60,7 +60,7 @@ public class BearychatBot extends GroovyVerticle {
                 if (!json || json.subdomain != 'craft_lamplighter') {
                     req.response().with {
                         putHeader 'Content-Type', 'application/json'
-                        end '{text: "access denied"}'
+                        end '{"text": "access denied"}'
                     }
                     log.debug 'access denied'
                     return
