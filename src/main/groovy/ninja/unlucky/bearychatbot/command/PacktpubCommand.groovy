@@ -12,7 +12,7 @@ class PacktpubCommand implements CommandExecutor {
 
     @Command(name = 'ebook')
     @WebAccessor(type = 'get', port = 443, host = 'https://www.packtpub.com', requestURI = '/packt/offers/free-learning')
-    Map freeEbook(final String[] options, final Document doc) {
+    Map freeEbook(List<String> options, Document doc) {
 
         def text = ""
         def items = []

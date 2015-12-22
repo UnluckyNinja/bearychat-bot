@@ -11,7 +11,7 @@ class SteamCommand implements CommandExecutor {
 
     @Command(name = 'steam')
     @WebAccessor(port = 443, host = 'https://steamdb.info', requestURI = '/sales/')
-    Map requestDailyDeals(final String[] optinos, final Document doc) {
+    Map requestDailyDeals(List<String> optinos, Document doc) {
         def text = "Steam Daily Deals"
         def items = []
         doc.select('tbody[data-section="dailydeal"]').first().children().each { child ->

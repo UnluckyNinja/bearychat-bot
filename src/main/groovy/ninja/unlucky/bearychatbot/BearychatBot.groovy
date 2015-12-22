@@ -1,5 +1,6 @@
 package ninja.unlucky.bearychatbot
 
+import com.sun.org.apache.bcel.internal.util.BCELifier
 import io.vertx.core.Future
 import io.vertx.groovy.core.buffer.Buffer
 import io.vertx.groovy.core.http.*
@@ -24,7 +25,7 @@ public class BearychatBot extends GroovyVerticle {
     HttpClient client
     HttpClient timerClient
 
-    Timer timer = new Timer(true)
+    synchronized Timer timer = new Timer(true)
 
     private Map<String, Closure> commands = [:].asSynchronized()
     private Map<String, WebAccessor> accessors = [:].asSynchronized()
@@ -33,18 +34,19 @@ public class BearychatBot extends GroovyVerticle {
     private String hookURI
 
     public void start(Future<Void> fut) {
-        hookURI = new File('hook.txt').text
+        hookURI = new File('hook.txt').readLines()[0].trim()
         log.info 'Starting'
         this.jsonSluper = new JsonSlurper()
         this.server = vertx.createHttpServer(compressionSupported: true)
         this.client = vertx.createHttpClient(ssl: true, trustAll: true, tryUseCompression: true)
         this.timerClient = vertx.createHttpClient(ssl: true, trustAll: true, tryUseCompression: true)
-        registerCommands(SteamCommand, PingCommand, PacktpubCommand, TimeCommand)
+        registerCommands(SteamCommand, PingCommand, PacktpubCommand)
+        registerCommand(new TimeCommand(this))
         setupServer(server, fut)
 
         timer = new Timer(true)
-        setupScheduleTask(timer, client);
-
+        setupScheduleTask(timer, client)
+        testClient(client)
         log.info 'Started'
     }
 
@@ -65,7 +67,7 @@ public class BearychatBot extends GroovyVerticle {
                     log.debug 'access denied'
                     return
                 }
-                String[] options = json.text.split('\\s')
+                List options = json.text.split('\\s')
                 if (options[0] != 'bot' || options.size() < 2) {
                     req.response().close()
                     return
@@ -114,6 +116,11 @@ public class BearychatBot extends GroovyVerticle {
         dateTime.minusSeconds(1)
     }
 
+    def testClient(client) {
+        log.debug hookURI
+        //println commands.time.call(['time','schedule','2','-p','test'])
+    }
+
     void hookPush(int port, String host, String hookURI, Map map, Closure c = null) {
         this.timerClient.post(443, 'hook.bearychat.com', hookURI) { c_res ->
             if (c) {
@@ -131,7 +138,7 @@ public class BearychatBot extends GroovyVerticle {
         hookPush(443, 'hook.bearychat.com', hookURI, map, c)
     }
 
-    HttpServerRequest processServerRequest(HttpServerRequest req, String[] options) {
+    HttpServerRequest processServerRequest(HttpServerRequest req, List<String> options) {
         def method = commands.get(options[0])
         def accessor = accessors.get(options[0])
         def cookie = cookies.get(options[0])
@@ -196,7 +203,7 @@ public class BearychatBot extends GroovyVerticle {
         }.end()
     }
 
-    private void setResponse(HttpServerRequest req, Map json) {
+    private HttpServerRequest setResponse(HttpServerRequest req, Map json) {
         req.response().with {
             String jsonOutput = JsonOutput.toJson(json)
             log.debug jsonOutput.length() //JsonOutput.prettyPrint(jsonOutput)
@@ -205,9 +212,9 @@ public class BearychatBot extends GroovyVerticle {
             putHeader 'Content-Length', '' + buffer.length()
             end buffer
         }
+        req
     }
-
-    private void setHeader(HttpClientRequest req, String cookie) {
+    private HttpClientRequest setHeader(HttpClientRequest req, String cookie) {
         req.with {
             putHeader 'accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
             putHeader 'accept-encoding', 'gzip, deflate, sdch'
@@ -221,17 +228,49 @@ public class BearychatBot extends GroovyVerticle {
             putHeader 'upgrade-insecure-requests', '1'
             putHeader 'user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36'
         }
+        req
+    }
+    void registerCommand(Object executor){
+        //TODO new time command
+        def methods = executor.class.methods.findAll {
+            if(it.getAnnotation(Command) != null){
+                if (it.parameters.size() == 2 && it.getAnnotation(WebAccessor) != null
+                        && it.parameterTypes[0] == List
+                        && it.parameterTypes[1] == Document){
+                    return true
+                }else if(it.parameters.size() == 1
+                        && it.parameterTypes[0] == List ){
+                    return true
+                }
+            }
+            return false
+        }
+
+        if (!methods) {
+            throw new NoSuchMethodException("Class(${executor.class.name}) you want to register doesn't have any satisfied method.")
+        }
+
+        methods.each {
+            def accessor = it.getAnnotation(WebAccessor)
+            def name = it.getAnnotation(Command).name()
+            this.commands.put(name, it.&invoke.curry(executor))
+            if (accessor) this.accessors.put(name, accessor)
+        }
     }
 
-    void registerCommands(Class<? extends CommandExecutor> clazz) {
+    void registerCommand(Class<? extends CommandExecutor> clazz) {
         def methods = clazz.methods.findAll {
-            it.getAnnotation(Command) != null &&
-                    (it.parameters.size() == 2 && it.getAnnotation(WebAccessor) != null
-                            && it.parameterTypes[0].with { isArray() && getComponentType() == String }
-                            && it.parameterTypes[1] == Document
-                            ||
-                            it.parameters.size() == 1
-                            && it.parameterTypes[0].with { isArray() && getComponentType() == String })
+            if(it.getAnnotation(Command) != null){
+                if (it.parameters.size() == 2 && it.getAnnotation(WebAccessor) != null
+                        && it.parameterTypes[0] == List
+                        && it.parameterTypes[1] == Document){
+                    return true
+                }else if(it.parameters.size() == 1
+                        && it.parameterTypes[0] == List ){
+                    return true
+                }
+            }
+            return false
         }
 
         if (!methods) {
@@ -248,11 +287,7 @@ public class BearychatBot extends GroovyVerticle {
     }
 
     void registerCommands(Class<? extends CommandExecutor>[] classes) {
-        classes.each { registerCommands(it) }
-    }
-
-    def testClient(client) {
-
+        classes.each { registerCommand(it) }
     }
 
     def debugRequest(req) {

@@ -4,6 +4,8 @@ import ninja.unlucky.bearychatbot.BearychatBot
 import ninja.unlucky.bearychatbot.schedule.GroovyTimerTask
 
 import java.time.LocalDateTime
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 import groovy.util.logging.Log4j2
 
@@ -21,10 +23,11 @@ class TimeCommand implements CommandExecutor {
     }
 
     @Command(name = 'time')
-    Map requestDailyDeals(final String[] options) {
+    Map timeCommand(List<String> options) {
+        log.debug options
         def text = 'NOT_SET_YET'
         if(options.size() == 1){
-            return [text: LocalDateTime.now().toString()]
+            return [text: ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME)]
         }
 
         if(options[1] == 'schedule' && options.size() >= 5){
@@ -41,7 +44,7 @@ class TimeCommand implements CommandExecutor {
                 }
                 def msg = options.drop(4).join(' ')
                 def task = new GroovyTimerTask().run {
-                    bot.hookPush([text: LocalDateTime.now().toString()]){
+                    bot.hookPush([text: msg]){ c_res ->
                         log.info "TimeCommand Executed at ${LocalDateTime.now().toString()}"
                     }
                 }
